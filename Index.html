@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WAHYU AI</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #08111f;
+      color: white;
+    }
+    header {
+      padding: 18px;
+      background: #101e33;
+      border-bottom: 1px solid #263750;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo {
+      background: #1677ff;
+      padding: 12px;
+      border-radius: 12px;
+      font-weight: bold;
+    }
+    header h2 { margin: 0; }
+    header p { margin: 5px 0 0; color: #a9bfd9; font-size: 13px; }
+    main {
+      max-width: 800px;
+      margin: auto;
+      padding: 18px;
+    }
+    #chat {
+      min-height: 55vh;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .message {
+      padding: 13px 16px;
+      border-radius: 14px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+    .bot {
+      background: #14243b;
+      align-self: flex-start;
+      max-width: 95%;
+    }
+    .user {
+      background: #1769e0;
+      align-self: flex-end;
+      max-width: 90%;
+    }
+    .composer {
+      position: sticky;
+      bottom: 0;
+      background: #08111f;
+      padding: 12px 0 20px;
+    }
+    form {
+      display: flex;
+      gap: 8px;
+      background: #14243b;
+      border: 1px solid #304662;
+      padding: 8px;
+      border-radius: 15px;
+    }
+    input {
+      min-width: 0;
+      flex: 1;
+      background: transparent;
+      border: 0;
+      outline: none;
+      color: white;
+      font-size: 16px;
+      padding: 10px;
+    }
+    button {
+      border: 0;
+      background: #1677ff;
+      color: white;
+      padding: 12px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    button:disabled { opacity: .5; }
+    .note {
+      text-align: center;
+      font-size: 12px;
+      color: #8da3bf;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">W</div>
+    <div>
+      <h2>WAHYU AI</h2>
+      <p>Asisten AI pribadi kamu</p>
+    </div>
+  </header>
+
+  <main>
+    <div id="chat" aria-live="polite">
+      <div class="message bot">
+        Halo! 👋 Saya WAHYU AI.
+        Ada yang bisa saya bantu hari ini?
+      </div>
+    </div>
+
+    <div class="composer">
+      <form id="form">
+        <input id="prompt"
+          placeholder="Tulis pertanyaan kamu..."
+          autocomplete="off" required>
+        <button id="send" type="submit">Kirim</button>
+      </form>
+      <p class="note">WAHYU AI · Periksa kembali informasi penting.</p>
+    </div>
+  </main>
+
+  <script>
+    const form = document.getElementById("form");
+    const promptInput = document.getElementById("prompt");
+    const chat = document.getElementById("chat");
+    const sendButton = document.getElementById("send");
+
+    // Ganti dengan URL backend milikmu setelah di-host.
+    const API_URL = "http://localhost:3000/api/chat";
+
+    function addMessage(text, type) {
+      const div = document.createElement("div");
+      div.className = "message " + type;
+      div.textContent = text;
+      chat.appendChild(div);
+      div.scrollIntoView({ behavior: "smooth", block: "end" });
+      return div;
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const message = promptInput.value.trim();
+      if (!message) return;
+
+      addMessage(message, "user");
+      promptInput.value = "";
+      sendButton.disabled = true;
+      const loading = addMessage("WAHYU AI sedang berpikir...", "bot");
+
+      try {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || "Permintaan gagal.");
+        }
+        loading.textContent = data.reply;
+      } catch (error) {
+        loading.textContent =
+          "Belum dapat terhubung ke AI. Periksa URL backend dan konfigurasi API.";
+        console.error(error);
+      } finally {
+        sendButton.disabled = false;
+        promptInput.focus();
+      }
+    });
+  </script>
+</body>
+</html>
